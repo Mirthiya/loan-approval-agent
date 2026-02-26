@@ -4,20 +4,7 @@ AUTONOMOUS LOAN APPROVAL AGENT
 Perceive -> Reason -> Act -> Remember -> Repeat (every 60 min)
 Credentials loaded from HuggingFace Secrets (environment variables)
 """
-import sys
-import types
 
-import altair as alt
-
-# Fix for Streamlit + Altair v6 compatibility
-vega_module = types.ModuleType("vegalite")
-vega_v4 = types.ModuleType("v4")
-vega_v4.api = alt
-vega_module.v4 = vega_v4
-
-sys.modules["altair.vegalite"] = vega_module
-sys.modules["altair.vegalite.v4"] = vega_v4
-sys.modules["altair.vegalite.v4.api"] = alt
 import os, json, pickle, sqlite3, smtplib, threading, time, logging
 from datetime import datetime
 from email.mime.text import MIMEText
