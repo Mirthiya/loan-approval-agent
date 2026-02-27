@@ -509,21 +509,65 @@ def parse_row(row):
         except: return d
     ts  = str(row.get("Timestamp", datetime.now().isoformat()))
     aid = ts.replace(" ","_").replace(":","").replace("/","")[:20]
+
+    # Get credit score - handles both single column and 3 separate columns
+    cs_single = sf(row.get("Credit score", row.get("Credit Score", row.get("Credit",0.0))))
+    cs1 = sf(row.get("Credit Score 1", row.get("Credit score 1", cs_single if cs_single>0 else 0.7)))
+    cs2 = sf(row.get("Credit Score 2", row.get("Credit score 2", cs_single if cs_single>0 else 0.7)))
+    cs3 = sf(row.get("Credit Score 3", row.get("Credit score 3", cs_single if cs_single>0 else 0.7)))
+
+    # Get income - handles "Income" or "Annual Income (Rs)" or "Annual Income"
+    income = sf(row.get("Annual Income (Rs)",
+               row.get("Annual Income",
+               row.get("Income",
+               row.get("income", 0.0)))))
+
+    # Get loan amount - handles "Loan amount" or "Loan Amount (Rs)"
+    loan = sf(row.get("Loan Amount (Rs)",
+              row.get("Loan Amount",
+              row.get("Loan amount",
+              row.get("loan amount", 0.0)))))
+
+    # Get employment - handles "Employment" or "Employment Status"
+    emp = str(row.get("Employment Status",
+              row.get("Employment",
+              row.get("employment", "Employed"))))
+
+    # Get age
+    age = si(row.get("Age", row.get("age", 34)))
+
+    # Debug: log what we found
+    if income == 0.0 or loan == 0.0:
+        # Try to find columns by partial match
+        for k,v in row.items():
+            k_low = str(k).lower()
+            if "income" in k_low and income == 0.0:
+                income = sf(v)
+            if "loan" in k_low and loan == 0.0:
+                loan = sf(v)
+            if "credit" in k_low and cs_single == 0.0:
+                cs_single = sf(v)
+                cs1 = cs2 = cs3 = cs_single if cs_single > 0 else 0.7
+            if "age" in k_low and age == 34:
+                age = si(v)
+            if "employ" in k_low:
+                emp = str(v)
+
     return {
         "app_id"       : aid,
-        "name"         : str(row.get("Full Name", row.get("Name","Applicant"))),
-        "email"        : str(row.get("Email Address", row.get("Email",""))),
+        "name"         : str(row.get("Full Name", row.get("Name", row.get("name","Applicant")))),
+        "email"        : str(row.get("Email Address", row.get("Email", row.get("email","")))),
         "phone"        : str(row.get("Phone", row.get("Mobile",""))),
-        "age"          : si(row.get("Age",34)),
-        "annual_income": sf(row.get("Annual Income (Rs)", row.get("Annual Income",900000))),
-        "loan_amount"  : sf(row.get("Loan Amount (Rs)", row.get("Loan Amount",500000))),
-        "existing_emi" : sf(row.get("Existing EMI (Rs/month)", row.get("Existing EMI",0))),
-        "employment"   : str(row.get("Employment Status", row.get("Employment","Employed"))),
-        "yrs_employed" : sf(row.get("Years Employed",3)),
-        "credit_1"     : sf(row.get("Credit Score 1",0.7)),
-        "credit_2"     : sf(row.get("Credit Score 2",0.7)),
-        "credit_3"     : sf(row.get("Credit Score 3",0.7)),
-        "family"       : si(row.get("Family Members",3)),
+        "age"          : age,
+        "annual_income": income if income > 0 else 900000,
+        "loan_amount"  : loan if loan > 0 else 500000,
+        "existing_emi" : sf(row.get("Existing EMI (Rs/month)", row.get("Existing EMI", row.get("EMI", 0)))),
+        "employment"   : emp,
+        "yrs_employed" : sf(row.get("Years Employed", row.get("Years employed", 3))),
+        "credit_1"     : cs1 if cs1 > 0 else 0.7,
+        "credit_2"     : cs2 if cs2 > 0 else 0.7,
+        "credit_3"     : cs3 if cs3 > 0 else 0.7,
+        "family"       : si(row.get("Family Members", row.get("Family", 3))),
         "_source"      : str(row.get("_source","google_sheet")),
     }
 
