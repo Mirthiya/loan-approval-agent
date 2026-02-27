@@ -118,7 +118,7 @@ def init_db():
         version TEXT, auc REAL, trained_on INTEGER, timestamp TEXT)""")
     conn.commit(); conn.close()
 
-def log_decision(app_id, name, email, phone, dec, prob, la, aa, ir, emi, fraud, fraud_reason, source):
+def log_decision(app_id, name, email, phone, dec, prob, la, aa, ir, emi, fraud, fraud_reason, source, _extra=None):
     conn = sqlite3.connect(DB_FILE)
     try:
         conn.execute("""INSERT OR IGNORE INTO decisions
