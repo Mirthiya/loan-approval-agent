@@ -1,0 +1,10 @@
+streamlit
+xgboost
+pandas
+numpy
+matplotlib
+scikit-learn
+requests
+reportlab
+twilio
+shap
