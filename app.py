@@ -1035,7 +1035,7 @@ def run_once(config, model_ref, FN, FM):
         if is_fraud:
             fraud_count += 1
             log_decision(aid,app["name"],app["email"],app.get("phone",""),
-                         "REJECTED",99.0,1.0,app["loan_amount"],0,None,0,
+                         "REJECTED",99.0,app["loan_amount"],0,None,0,
                          True,fraud_reason,app["_source"])
             save_processed_id(aid)
             # Alert manager
