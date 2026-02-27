@@ -126,7 +126,7 @@ def log_decision(app_id, name, email, phone, dec, prob, la, aa, ir, emi, fraud, 
              loan_amount,approved_amt,interest_rate,emi,fraud_flag,fraud_reason,source,timestamp)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (app_id,name,email,phone,dec,float(prob),float(100-prob),
-             float(la),float(aa),float(ir) if ir else 0.0,float(emi),
+             float(la) if la else 0.0,float(aa) if aa else 0.0,float(ir) if ir else 0.0,float(emi) if emi else 0.0,
              int(fraud),fraud_reason,source,datetime.now().isoformat()))
         conn.commit()
     except Exception: pass
@@ -1034,7 +1034,7 @@ def run_once(config, model_ref, FN, FM):
         is_fraud, fraud_reason = check_fraud(app, all_df)
         if is_fraud:
             fraud_count += 1
-            log_decision(aid,app["name"],app["email"],app["phone"],
+            log_decision(aid,app["name"],app["email"],app.get("phone",""),
                          "REJECTED",99.0,1.0,app["loan_amount"],0,None,0,
                          True,fraud_reason,app["_source"])
             save_processed_id(aid)
@@ -1060,7 +1060,7 @@ def run_once(config, model_ref, FN, FM):
             alog("ERROR","Decision failed: "+str(e)); continue
 
         # Log to database
-        log_decision(aid,app["name"],app["email"],app["phone"],
+        log_decision(aid,app["name"],app["email"],app.get("phone",""),
                      result["decision"],result["default_prob"],
                      app["loan_amount"],result["approved_amount"],
                      result["interest_rate"],result["emi"],
@@ -1079,7 +1079,7 @@ def run_once(config, model_ref, FN, FM):
 
         # WhatsApp
         if app.get("phone") and TWILIO_SID:
-            send_whatsapp(app["phone"],app["name"],result["decision"],
+            send_whatsapp(app.get("phone",""),app["name"],result["decision"],
                           result["approved_amount"],result["emi"],
                           TWILIO_SID,TWILIO_TOKEN,TWILIO_FROM)
 
